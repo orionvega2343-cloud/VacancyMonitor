@@ -2,13 +2,14 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	PollInterval      int               `yaml:"poll_interval"`
+	PollInterval      time.Duration     `yaml:"poll_interval"`
 	WorkerCount       int               `yaml:"worker_count"`
 	ChannelBufferSize int               `yaml:"channel_buffer_size"`
 	ShutdownTimeout   int               `yaml:"shutdown_timeout"`
@@ -39,14 +40,14 @@ type RedisConfig struct {
 func MustLoad() *Config {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file", err)
 	}
 
 	var cfg Config
 
 	err = cleanenv.ReadConfig("config/config.yml", &cfg)
 	if err != nil {
-		log.Fatal("Error loading config")
+		log.Fatal("Error loading config", err)
 	}
 	return &cfg
 
