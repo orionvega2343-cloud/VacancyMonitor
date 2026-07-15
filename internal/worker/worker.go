@@ -5,7 +5,6 @@ import (
 	"VacancyMonitor/internal/models"
 	"VacancyMonitor/internal/repository"
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -20,10 +19,11 @@ type Worker struct {
 	workerCount  int
 	filter       models.Filter
 	pollInterval time.Duration
+	share        chan models.Vacancy
 }
 
-func NewWorker(vacancyChan chan models.Vacancy, fetcher api.VacancyFetcher, repo repository.VacancyRepo, res chan models.Vacancy, wg *sync.WaitGroup, workerCount int, filter models.Filter, pollInterval time.Duration) *Worker {
-	return &Worker{vacancyChan: vacancyChan, fetcher: fetcher, repo: repo, res: res, wg: wg, workerCount: workerCount, filter: filter, pollInterval: pollInterval}
+func NewWorker(vacancyChan chan models.Vacancy, fetcher api.VacancyFetcher, repo repository.VacancyRepo, res chan models.Vacancy, wg *sync.WaitGroup, workerCount int, filter models.Filter, pollInterval time.Duration, share chan models.Vacancy) *Worker {
+	return &Worker{vacancyChan: vacancyChan, fetcher: fetcher, repo: repo, res: res, wg: wg, workerCount: workerCount, filter: filter, pollInterval: pollInterval, share: share}
 }
 
 //Создаем данные и
@@ -84,7 +84,7 @@ func (w *Worker) Merge() <-chan models.Vacancy {
 }
 
 func (w *Worker) call(ctx context.Context) {
-	//тикер для непрерывного вызова producer
+	//тикер непрерывного вызова producer
 	//для слежки за новыми вакансиями
 	ticker := time.NewTicker(w.pollInterval)
 	defer ticker.Stop()
@@ -102,7 +102,7 @@ func (w *Worker) call(ctx context.Context) {
 				go w.Worker(ctx, in)
 			}
 			for v := range out {
-				fmt.Println(v)
+				w.share <- v
 			}
 		}
 	}
