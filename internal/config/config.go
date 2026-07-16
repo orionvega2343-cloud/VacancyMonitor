@@ -38,14 +38,13 @@ type RedisConfig struct {
 }
 
 func MustLoad() *Config {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file", err)
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println("No .env file found, relying on environment variables")
 	}
 
 	var cfg Config
 
-	err = cleanenv.ReadConfig("config/config.yml", &cfg)
+	err := cleanenv.ReadConfig("config/config.yml", &cfg)
 	if err != nil {
 		log.Fatal("Error loading config", err)
 	}
